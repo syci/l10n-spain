@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <function id="setplan_fp_extra_canarias"
+        model="account.chart.template"
+        name="try_loading_for_current_company">
+        <value eval="[ref('l10n_es.account_chart_template_pymes')]"/>
+        </function>
+    </data>
+</odoo>
