@@ -186,8 +186,8 @@ msgid "Calculation parameters"
 msgstr ""
 
 #. module: l10n_es_aeat_mod347
-#: selection:l10n.es.aeat.mod347.report,state:0
-msgid "Cancelled"
+#: view:l10n.es.aeat.mod347.partner_record:l10n_es_aeat_mod347.partner_record_search_view
+msgid "Invalid records"
 msgstr ""
 
 #. module: l10n_es_aeat_mod347
@@ -504,7 +504,7 @@ msgstr ""
 
 #. module: l10n_es_aeat_mod347
 #: report:report_l10n_es_aeat_mod347.report:0
-msgid "Ins. Oper"
+msgid "PARTNER RECORD LINES"
 msgstr ""
 
 #. module: l10n_es_aeat_mod347
@@ -546,7 +546,7 @@ msgstr ""
 
 #. module: l10n_es_aeat_mod347
 #: report:report_l10n_es_aeat_mod347.report:0
-msgid "Invoiced amount"
+msgid "Partner"
 msgstr ""
 
 #. module: l10n_es_aeat_mod347
@@ -685,8 +685,10 @@ msgid "Only for cash basis operations. Set to identify cash basis operations asi
 msgstr ""
 
 #. module: l10n_es_aeat_mod347
-#: help:l10n.es.aeat.mod347.partner_record,insurance_operation:0
-msgid "Only for insurance companies. Set to identify insurance operations aside from the rest."
+#: view:l10n.es.aeat.mod347.partner_record:l10n_es_aeat_mod347.l10n_es_aeat_mod347_partner_record_tree_view
+#: view:l10n.es.aeat.mod347.partner_record:l10n_es_aeat_mod347.view_l10n_es_aeat_mod347_partner_record_tree
+#: field:l10n.es.aeat.mod347.report,partner_record_ids:0
+msgid "Partner Records"
 msgstr ""
 
 #. module: l10n_es_aeat_mod347

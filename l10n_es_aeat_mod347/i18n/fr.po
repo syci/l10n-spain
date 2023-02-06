@@ -406,12 +406,12 @@ msgstr "Fichier"
 #. module: l10n_es_aeat_mod347
 #: field:l10n.es.aeat.mod347.export_to_boe,name:0
 msgid "File name"
-msgstr "Nom du fichier"
+msgstr ""
 
 #. module: l10n_es_aeat_mod347
 #: selection:account.period,quarter:0
 msgid "First"
-msgstr "Premier"
+msgstr ""
 
 #. module: l10n_es_aeat_mod347
 #: field:l10n.es.aeat.mod347.partner_record,first_quarter_cash_amount:0
