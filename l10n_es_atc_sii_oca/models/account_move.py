@@ -64,7 +64,10 @@ class AccountMove(models.Model):
         taxes_dict, tax_amount, not_in_amount_total = super()._get_sii_in_taxes()
         if not self._is_atc_sii_agency() or self.move_type[:2] != "in":
             return taxes_dict, tax_amount, not_in_amount_total
-        return self._atc_patch_sfrbi_in_taxes(
+        taxes_dict, tax_amount, not_in_amount_total = self._atc_patch_sfrbi_in_taxes(
+            taxes_dict, tax_amount, not_in_amount_total
+        )
+        return self._atc_prune_empty_purchase_breakdown(
             taxes_dict, tax_amount, not_in_amount_total
         )
 
@@ -74,13 +77,16 @@ class AccountMove(models.Model):
         taxes_sfrbi = self._get_aeat_taxes_map(["SFRBI"], self.date)
         if not taxes_sfrbi:
             return taxes_dict, tax_amount, not_in_amount_total
-        base_dict = taxes_dict.setdefault("DesgloseIVA", {"DetalleIVA": []})
-        detalle = base_dict["DetalleIVA"]
+        detalle = None
         tax_lines = self._get_aeat_tax_info()
         for tax_line in tax_lines.values():
             tax = tax_line["tax"]
             if tax not in taxes_sfrbi:
                 continue
+            if detalle is None:
+                detalle = taxes_dict.setdefault("DesgloseIVA", {"DetalleIVA": []})[
+                    "DetalleIVA"
+                ]
             tax_dict = self._get_sii_tax_dict(tax_line, tax_lines)
             tax_dict["BienInversion"] = "S"
             if self._merge_tax_dict(
@@ -93,6 +99,36 @@ class AccountMove(models.Model):
             detalle.append(tax_dict)
             tax_amount += tax_line["deductible_amount"]
         return taxes_dict, tax_amount, not_in_amount_total
+
+    @api.model
+    def _atc_prune_empty_purchase_breakdown(
+        self, taxes_dict, tax_amount, not_in_amount_total
+    ):
+        """Elimina DesgloseIVA/IGIC sin líneas (p. ej. compras solo ISP)."""
+        for block_key, detail_key in (
+            ("DesgloseIVA", "DetalleIVA"),
+            ("DesgloseIGIC", "DetalleIGIC"),
+        ):
+            block = taxes_dict.get(block_key)
+            if isinstance(block, dict) and not block.get(detail_key):
+                taxes_dict.pop(block_key, None)
+        return taxes_dict, tax_amount, not_in_amount_total
+
+    @api.model
+    def _atc_prune_invoice_dict_in(self, inv_dict):
+        """Quita bloques de desglose vacíos tras el mapeo IVA→IGIC."""
+        factura = inv_dict.get("FacturaRecibida") or {}
+        desglose = factura.get("DesgloseFactura")
+        if not isinstance(desglose, dict):
+            return inv_dict
+        for block_key, detail_key in (
+            ("DesgloseIGIC", "DetalleIGIC"),
+            ("DesgloseIVA", "DetalleIVA"),
+        ):
+            block = desglose.get(block_key)
+            if isinstance(block, dict) and not block.get(detail_key):
+                desglose.pop(block_key, None)
+        return inv_dict
 
     @api.model
     def _sii_atc_replace_tax_keys(self, invoice_dic):
@@ -137,6 +173,7 @@ class AccountMove(models.Model):
             return inv_dict
         if self._is_atc_sii_agency():
             inv_dict = self._sii_atc_replace_tax_keys(inv_dict)
+            inv_dict = self._atc_prune_invoice_dict_in(inv_dict)
         return inv_dict
 
     def _get_aeat_taxes_map(self, codes, date):
@@ -163,12 +200,9 @@ class AccountMove(models.Model):
                 tax_templates = sii_map.map_lines.filtered(
                     lambda line: line.code in codes
                 ).tax_xmlid_ids
-                taxes = self.env["account.tax"]
-                for template in tax_templates:
-                    tax_id = self.company_id._get_tax_id_from_xmlid(template.name)
-                    if tax_id:
-                        taxes |= self.env["account.tax"].browse(tax_id)
-                return taxes
+                return self.company_id._get_taxes_from_xmlids(
+                    tax_templates.mapped("name")
+                )
         return super()._get_aeat_taxes_map(codes, date)
 
     def _get_sii_identifier(self):

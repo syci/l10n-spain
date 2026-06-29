@@ -15,6 +15,8 @@ class TestAtcSiiPayloadPurchases(TestL10nEsAtcSiiPayloadBase):
         )
         payload = self._payload(move)
         self._assert_no_iva_keys(payload)
+        desglose = self._factura_recibida(payload)["DesgloseFactura"]
+        self.assertNotIn("DesgloseIGIC", desglose)
         isp = self._walk_payload(payload, "InversionSujetoPasivo")
         self.assertTrue(isp)
         detalle = isp[0].get("DetalleIGIC") or isp[0].get("DetalleIVA")
