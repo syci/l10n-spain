@@ -200,6 +200,8 @@ class AccountMove(models.Model):
                 tax_templates = sii_map.map_lines.filtered(
                     lambda line: line.code in codes
                 ).tax_xmlid_ids
+                if not tax_templates:
+                    return self.env["account.tax"]
                 return self.company_id._get_taxes_from_xmlids(
                     tax_templates.mapped("name")
                 )
