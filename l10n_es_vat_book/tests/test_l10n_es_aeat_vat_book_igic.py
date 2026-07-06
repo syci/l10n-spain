@@ -23,6 +23,7 @@ class TestL10nEsVatBookIgic(TestL10nEsAeatModBase):
     taxes_purchase = {
         # tax code: (base, tax_amount)
         "IGIC_SOP_7": (230, 16.1),
+        "IGIC_SOP_7_S": (1000, 70.0),
         "IGIC_SOP_I_7": (200, 14),
         "IGIC_SOP_0": (100, 0),
     }
@@ -93,25 +94,30 @@ class TestL10nEsVatBookIgic(TestL10nEsAeatModBase):
             self.assertEqual(line.base_amount, 0.0)
             self.assertEqual(line.tax_amount, 0.0)
         # Check tax summary for received invoices
-        self.assertEqual(len(vat_book.received_tax_summary_ids), 3)
+        self.assertEqual(len(vat_book.received_tax_summary_ids), 4)
 
         rec_summaries = sorted(
             vat_book.received_tax_summary_ids,
             key=lambda line: line.tax_amount,
             reverse=True,
         )
-        # IGIC_SOP_7 - 7% IGIC
+        # IGIC_SOP_7_S - 7% IGIC servicios
         line = rec_summaries[0]
+        self.assertAlmostEqual(line.base_amount, 1000)
+        self.assertAlmostEqual(line.tax_amount, 70.0)
+
+        # IGIC_SOP_7 - 7% IGIC bienes
+        line = rec_summaries[1]
         self.assertAlmostEqual(line.base_amount, 230)
         self.assertAlmostEqual(line.tax_amount, 16.1)
 
-        # IGIC_SOP_I_7 - 7% IGIC
-        line = rec_summaries[1]
+        # IGIC_SOP_I_7 - 7% IGIC inversión sujeto pasivo
+        line = rec_summaries[2]
         self.assertAlmostEqual(line.base_amount, 200)
         self.assertAlmostEqual(line.tax_amount, 14)
 
         # IGIC_SOP_0 - 0% IGIC
-        line = rec_summaries[2]
+        line = rec_summaries[3]
         self.assertAlmostEqual(line.base_amount, 100)
         self.assertAlmostEqual(line.tax_amount, 0)
 
