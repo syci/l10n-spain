@@ -40,10 +40,94 @@ class AccountMove(models.Model):
                 document.verifactu_tax_key = ATC_VERIFACTU_TAX_KEY
         return res
 
-    @api.depends("company_id", "company_id.tax_agency_id")
+    def _igic_repep_sale_taxes(self):
+        """IGIC Exento Repercutido (igic_re_ex).
+
+        Es el exento genérico. REPEP solo si la clave queda en 18.
+        El arrendamiento usa el mismo impuesto y la posición fiscal pone 11 o 01.
+        """
+        self.ensure_one()
+        tax = self.env.ref(
+            f"l10n_es_igic.{self.company_id.id}_account_tax_template_igic_re_ex",
+            raise_if_not_found=False,
+        )
+        if not tax or tax.type_tax_use != "sale":
+            return self.env["account.tax"]
+        return tax
+
+    def _has_igic_repep_sale_tax(self):
+        self.ensure_one()
+        return bool(self.invoice_line_ids.tax_ids & self._igic_repep_sale_taxes())
+
+    def _is_igic_lease_fiscal_position(self):
+        self.ensure_one()
+        position = self.fiscal_position_id
+        if not position:
+            return False
+        xmlid = position.get_external_id().get(position.id, "")
+        return xmlid.endswith("fp_lease_canary")
+
+    def _igic_export_sale_taxes(self):
+        """IGIC 0% (Exportaciones): expedición fuera de Canarias, art. 11 Ley 20/1991."""
+        self.ensure_one()
+        tax = self.env.ref(
+            f"l10n_es_igic.{self.company_id.id}_account_tax_template_igic_ex_0",
+            raise_if_not_found=False,
+        )
+        if not tax or tax.type_tax_use != "sale":
+            return self.env["account.tax"]
+        return tax
+
+    def _has_igic_export_sale_tax(self):
+        self.ensure_one()
+        return bool(self.invoice_line_ids.tax_ids & self._igic_export_sale_taxes())
+
+    def _igic_repep_legend(self):
+        """Texto impreso obligatorio en facturas de franquicia fiscal."""
+        self.ensure_one()
+        return (
+            self.move_type in ("out_invoice", "out_refund")
+            and self._is_atc_verifactu_company()
+            and self.verifactu_registration_key_code == "18"
+            and self._has_igic_repep_sale_tax()
+        )
+
+    @api.depends(
+        "company_id",
+        "company_id.tax_agency_id",
+        "fiscal_position_id",
+        "fiscal_position_id.verifactu_registration_key",
+        "invoice_line_ids.tax_ids",
+    )
     def _compute_verifactu_registration_key(self):
         res = super()._compute_verifactu_registration_key()
+        key_18 = self.env.ref(
+            "l10n_es_verifactu_oca.verifactu_registration_keys_igic_18",
+            raise_if_not_found=False,
+        )
+        key_02 = self.env.ref(
+            "l10n_es_verifactu_oca.verifactu_registration_keys_igic_02",
+            raise_if_not_found=False,
+        )
         for document in self:
+            if document._is_igic_lease_fiscal_position():
+                continue
+            if (
+                key_18
+                and document.move_type in ("out_invoice", "out_refund")
+                and document._is_atc_verifactu_company()
+                and document._has_igic_repep_sale_tax()
+            ):
+                document.verifactu_registration_key = key_18
+                continue
+            if (
+                key_02
+                and document.move_type in ("out_invoice", "out_refund")
+                and document._is_atc_verifactu_company()
+                and document._has_igic_export_sale_tax()
+            ):
+                document.verifactu_registration_key = key_02
+                continue
             if document.fiscal_position_id:
                 continue
             if document._is_atc_verifactu_company():
@@ -193,7 +277,8 @@ class AccountMove(models.Model):
     def _get_verifactu_tax_dict(self, tax_line, tax_lines, *args, **kwargs):
         self.ensure_one()
         tax_dict = super()._get_verifactu_tax_dict(tax_line, tax_lines, *args, **kwargs)
-        if self.verifactu_registration_key_code != "17":
+        operation_type = args[0] if args else kwargs.get("operation_type")
+        if operation_type == "exempt" or self.verifactu_registration_key_code != "17":
             return tax_dict
         tax = tax_line["tax"]
         if not self._is_igic_minorista_sale_tax(tax):
@@ -208,3 +293,93 @@ class AccountMove(models.Model):
         tax_dict["TipoImpositivo"] = str(float(theoretical))
         tax_dict["CargaImpositivaImplicitadeMinoristas"] = carga
         return tax_dict
+
+    def _igic_lease_exemption(self):
+        """Arrendamiento: la posición fiscal deja la clave 11 o 01 y la causa es E1."""
+        self.ensure_one()
+        if self.verifactu_registration_key_code == "18":
+            return False
+        if self._is_igic_lease_fiscal_position():
+            return True
+        return self.verifactu_registration_key_code in ("11", "01")
+
+    def _get_igic_verifactu_exempt_cause(self, tax, exempt_groups):
+        """E7 (REPEP) y E8 (otras) antes que E6. El módulo base no las distingue."""
+        for code in ("E1", "E2", "E3", "E4", "E5", "E7", "E8", "E6"):
+            if tax in exempt_groups.get(code, self.env["account.tax"]):
+                if code == "E7" and self._igic_lease_exemption():
+                    return "E1"
+                return code
+        return "E6"
+
+    def _get_verifactu_taxes_and_total(self):
+        self.ensure_one()
+        if not self._is_atc_verifactu_company():
+            return super()._get_verifactu_taxes_and_total()
+        taxes_dict = {"DetalleDesglose": []}
+        tax_lines = self._get_aeat_tax_info()
+        document_date = self._get_document_date()
+        groups = {
+            code: self._get_verifactu_taxes_map([code], document_date)
+            for code in (
+                "S1",
+                "S2",
+                "N1",
+                "N2",
+                "RE",
+                "E1",
+                "E2",
+                "E3",
+                "E4",
+                "E5",
+                "E6",
+                "E7",
+                "E8",
+                "TaxNotIncludedInTotal",
+                "BaseNotIncludedInTotal",
+            )
+        }
+        taxes_not_in_total = groups["TaxNotIncludedInTotal"]
+        base_not_in_total = groups["BaseNotIncludedInTotal"]
+        excluded_taxes = taxes_not_in_total + base_not_in_total
+        breakdown_taxes = groups["S1"] + groups["S2"] + groups["N1"] + groups["N2"]
+        exempt_taxes = self.env["account.tax"]
+        for code in ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8"):
+            exempt_taxes += groups[code]
+        not_in_amount_total = 0.0
+        not_in_taxes = 0.0
+        for tax_line in tax_lines.values():
+            tax = tax_line["tax"]
+            if tax in taxes_not_in_total:
+                not_in_amount_total += tax_line["amount"]
+            elif tax in base_not_in_total:
+                not_in_amount_total += tax_line["base"]
+            if tax in breakdown_taxes or tax in exempt_taxes:
+                tax_dict = {
+                    "Impuesto": self.verifactu_tax_key,
+                    "ClaveRegimen": self.verifactu_registration_key_code,
+                }
+                operation_type = self._get_verifactu_operation_type(
+                    tax_line,
+                    groups["S1"],
+                    groups["S2"],
+                    groups["N1"],
+                    groups["N2"],
+                )
+                if operation_type != "exempt":
+                    tax_dict["CalificacionOperacion"] = operation_type
+                else:
+                    tax_dict["OperacionExenta"] = self._get_igic_verifactu_exempt_cause(
+                        tax, groups
+                    )
+                tax_dict.update(
+                    self._get_verifactu_tax_dict(tax_line, tax_lines, operation_type)
+                )
+                taxes_dict["DetalleDesglose"].append(tax_dict)
+            elif tax in excluded_taxes:
+                not_in_taxes += tax_line["amount"]
+            elif tax not in groups["RE"]:
+                raise UserError(_("%s tax is not mapped to VERI*FACTU.", tax.name))
+        amount_tax = self.amount_tax_signed - not_in_taxes
+        amount_total = self.amount_total_signed - not_in_amount_total
+        return taxes_dict, amount_tax, amount_total

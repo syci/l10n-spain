@@ -38,3 +38,102 @@ class AccountFiscalPosition(models.Model):
                 if company.tax_agency_id == agency:
                     vals["verifactu_tax_key"] = ATC_VERIFACTU_TAX_KEY
         return super().create(vals_list)
+
+    @api.model
+    def _igic_verifactu_separate_lease_and_recargo(self):
+        """El arrendamiento usa igic_re_ex. El recargo IGIC no lleva la clave 18."""
+        re_ex_template = self.env.ref(
+            "l10n_es_igic.account_tax_template_igic_re_ex", raise_if_not_found=False
+        )
+        lease_template = self.env.ref(
+            "l10n_es_igic.account_tax_template_igic_lease_ex", raise_if_not_found=False
+        )
+        key_01 = self.env.ref(
+            "l10n_es_verifactu_oca.verifactu_registration_keys_igic_01",
+            raise_if_not_found=False,
+        )
+        key_11 = self.env.ref(
+            "l10n_es_verifactu_oca.verifactu_registration_keys_igic_11",
+            raise_if_not_found=False,
+        )
+        if lease_template:
+            map_line = self.env.ref(
+                "l10n_es_verifactu_oca.verifactu_map_line_E1",
+                raise_if_not_found=False,
+            )
+            if map_line:
+                map_line.write({"taxes": [(3, lease_template.id)]})
+        ir_model_data = self.env["ir.model.data"].sudo()
+        Tax = self.env["account.tax"]
+        for company in self.env["res.company"].search([]):
+            re_ex = (
+                company.get_taxes_from_templates(re_ex_template).filtered(
+                    lambda tax: tax.type_tax_use == "sale"
+                )[:1]
+                if re_ex_template
+                else Tax
+            )
+            data_name = f"{company.id}_account_tax_template_igic_lease_ex"
+            existing = ir_model_data.search(
+                [
+                    ("module", "=", "l10n_es_igic"),
+                    ("name", "=", data_name),
+                    ("model", "=", "account.tax"),
+                ],
+                limit=1,
+            )
+            lease_tax = Tax.browse(existing.res_id).exists() if existing else Tax
+            lease_fp = self.env.ref(
+                f"l10n_es_igic.{company.id}_fp_lease_canary",
+                raise_if_not_found=False,
+            )
+            agency = self.env.ref(
+                "l10n_es_aeat.aeat_tax_agency_canarias", raise_if_not_found=False
+            )
+            if lease_fp and agency and company.tax_agency_id == agency:
+                if lease_fp.verifactu_tax_key != "03":
+                    lease_fp.verifactu_tax_key = "03"
+                if key_11 and lease_fp.verifactu_registration_key.code not in (
+                    "11",
+                    "01",
+                ):
+                    lease_fp.verifactu_registration_key = key_11
+            if lease_fp and lease_tax and re_ex:
+                lines = lease_fp.tax_ids.filtered(
+                    lambda line, tax=lease_tax: line.tax_dest_id == tax
+                )
+                if lines:
+                    lines.write({"tax_dest_id": re_ex.id})
+            referenced = lease_tax and (
+                self.env["account.move.line"].search_count(
+                    [("tax_ids", "in", lease_tax.ids)]
+                )
+                or self.env["account.fiscal.position.tax"].search_count(
+                    [
+                        "|",
+                        ("tax_src_id", "=", lease_tax.id),
+                        ("tax_dest_id", "=", lease_tax.id),
+                    ]
+                )
+            )
+            if lease_tax and not referenced:
+                data = existing
+                lease_tax.unlink()
+                if data.exists():
+                    data.unlink()
+            recargo_fp = self.env.ref(
+                f"l10n_es_igic.{company.id}_fp_recargo_canary",
+                raise_if_not_found=False,
+            )
+            if (
+                key_01
+                and recargo_fp
+                and recargo_fp.verifactu_tax_key == "03"
+                and recargo_fp.verifactu_registration_key.code == "18"
+            ):
+                recargo_fp.verifactu_registration_key = key_01
+        if lease_template and not self.env["account.tax"].search_count(
+            [("name", "=", lease_template.name)]
+        ):
+            lease_template.unlink()
+        self.env["res.company"].clear_caches()

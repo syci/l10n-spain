@@ -20,11 +20,8 @@
         {
           "Impuesto": "03",
           "ClaveRegimen": "17",
-          "CalificacionOperacion": "S1",
-          "TipoImpositivo": "3.0",
-          "BaseImponibleOimporteNoSujeto": 100.0,
-          "CuotaRepercutida": 0,
-          "CargaImpositivaImplicitadeMinoristas": 2.1
+          "OperacionExenta": "E1",
+          "BaseImponibleOimporteNoSujeto": 100.0
         }
       ]
     },

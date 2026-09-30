@@ -1,7 +1,5 @@
 # Copyright 2025 Binhex - Christian Ramos
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
-from odoo.exceptions import UserError
-
 from odoo.addons.l10n_es_verifactu_oca.tests.test_10n_es_verifactu import (
     TestL10nEsAeatVerifactu,
 )
@@ -84,7 +82,7 @@ class TestL10nEsAeatVerifactuIgicNewTaxes(TestL10nEsAeatVerifactuIgicMixin):
             "l10n_es_igic_verifactu_oca",
         )
 
-    def test_get_verifactu_igic_minorista_missing_theoretical_rate(self):
+    def test_get_verifactu_igic_minorista_without_product_tax_is_exempt(self):
         from odoo import Command
 
         product = self.env["product.product"].create({"name": "No IGIC tax"})
@@ -113,8 +111,13 @@ class TestL10nEsAeatVerifactuIgicNewTaxes(TestL10nEsAeatVerifactuIgicMixin):
                 ],
             }
         )
-        with self.assertRaises(UserError):
-            invoice._get_verifactu_invoice_dict_out()
+        taxes, _amount_tax, _amount_total = invoice._get_verifactu_taxes_and_total()
+        line = taxes["DetalleDesglose"][0]
+        self.assertEqual(line["ClaveRegimen"], "17")
+        self.assertEqual(line["OperacionExenta"], "E1")
+        self.assertNotIn("CalificacionOperacion", line)
+        self.assertNotIn("TipoImpositivo", line)
+        self.assertNotIn("CuotaRepercutida", line)
 
     def test_get_verifactu_igic_r_1(self):
         self._create_and_test_invoice_verifactu_dict(
