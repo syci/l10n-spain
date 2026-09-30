@@ -24,6 +24,11 @@ class AccountMove(models.Model):
         agency = self._get_atc_tax_agency()
         return bool(agency and self.company_id.tax_agency_id == agency)
 
+    def _get_verifactu_accepted_tax_agencies(self):
+        return super()._get_verifactu_accepted_tax_agencies() + [
+            "l10n_es_aeat.aeat_tax_agency_canarias",
+        ]
+
     @api.depends("company_id", "company_id.tax_agency_id")
     def _compute_verifactu_tax_key(self):
         res = super()._compute_verifactu_tax_key()
