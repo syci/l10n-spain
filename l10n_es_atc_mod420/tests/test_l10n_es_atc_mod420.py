@@ -29,6 +29,8 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
         "l10n_es_igic.account_tax_template_igic_r_20": (2800, 560),
         "l10n_es_igic.account_tax_template_igic_r_20//neg": (-280, -56),
         "l10n_es_igic.account_tax_template_igic_r_0": (1500, 0),
+        "l10n_es_igic.account_tax_template_igic_r_1": (2900, 29),
+        "l10n_es_igic.account_tax_template_igic_r_1//neg": (-290, -2.9),
         "l10n_es_igic.account_tax_template_igic_s_ISP0": (1600, 0),
         "l10n_es_igic.account_tax_template_igic_ex_0": (1700, 0),
         "l10n_es_igic.account_tax_template_igic_re_ex": (1800, 0),
@@ -48,6 +50,17 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
         "l10n_es_igic.account_tax_template_igic_sop_15//neg": (-60, -9),
         "l10n_es_igic.account_tax_template_igic_sop_20": (700, 140),
         "l10n_es_igic.account_tax_template_igic_sop_20//neg": (-70, -14),
+        "l10n_es_igic.account_tax_template_igic_sop_1": (800, 8),
+        "l10n_es_igic.account_tax_template_igic_sop_1_cmino": (1007, 7.05),
+        "l10n_es_igic.account_tax_template_igic_sop_3_cmino_inv": (1021, 21.44),
+        "l10n_es_igic.account_tax_template_igic_sop_5_cmino_inv": (1035, 36.22),
+        "l10n_es_igic.account_tax_template_igic_sop_7_cmino_inv": (1049, 51.4),
+        "l10n_es_igic.account_tax_template_igic_sop_9_5_cmino_inv": (
+            1066.5,
+            70.92,
+        ),
+        "l10n_es_igic.account_tax_template_igic_sop_15_cmino_inv": (1105, 116.02),
+        "l10n_es_igic.account_tax_template_igic_sop_20_cmino_inv": (1140, 159.6),
         "l10n_es_igic.account_tax_template_igic_sop_0_inv": (110, 0),
         "l10n_es_igic.account_tax_template_igic_sop_3_inv": (120, 3.6),
         "l10n_es_igic.account_tax_template_igic_sop_7_inv": (130, 9.1),
@@ -72,12 +85,15 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
         "l10n_es_igic.account_tax_template_igic_ISP95": (370, 35.15),
         "l10n_es_igic.account_tax_template_igic_ISP15": (380, 57),
         "l10n_es_igic.account_tax_template_igic_ISP20": (390, 78),
+        "l10n_es_igic.account_tax_template_igic_ISP1": (480, 4.8),
         "l10n_es_igic.account_tax_template_igic_p_re0": (410, 0),
+        "l10n_es_igic.account_tax_template_igic_p_re01": (470, 0.47),
         "l10n_es_igic.account_tax_template_igic_p_re03": (420, 1.26),
         "l10n_es_igic.account_tax_template_igic_p_re07": (430, 3.01),
         "l10n_es_igic.account_tax_template_igic_p_re095": (440, 4.18),
         "l10n_es_igic.account_tax_template_igic_p_re15": (450, 6.75),
         "l10n_es_igic.account_tax_template_igic_p_re20": (460, 9.2),
+        "l10n_es_igic.account_tax_template_igic_sop_i_1": (490, 4.9),
     }
     taxes_result = {
         # IGIC Tipo cero - Base imponible 0%
@@ -85,9 +101,19 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
         # IGIC Tipo cero - Cuota 0%
         "3": 0,  # account_tax_template_igic_r_0
         # IGIC Tipo reducido - Base imponible 3%
-        "4": (3 * 2000) - 3 * 200,  # account_tax_template_igic_r_3
+        "4": (
+            (3 * 2000)
+            - 3 * 200  # account_tax_template_igic_r_3
+            + (3 * 2900)
+            - 3 * 290  # account_tax_template_igic_r_1
+        ),
         # IGIC Tipo reducido - Cuota 3%
-        "6": (3 * 60) - 3 * 6,  # account_tax_template_igic_r_3
+        "6": (
+            (3 * 60)
+            - 3 * 6  # account_tax_template_igic_r_3
+            + (3 * 29)
+            - 3 * 2.9  # account_tax_template_igic_r_1
+        ),
         # IGIC Tipo general - Base imponible 7%
         "7": (3 * 2200) - 3 * 220,  # account_tax_template_igic_r_7
         # IGIC Tipo general - Cuota 7%
@@ -112,6 +138,7 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 370)  # account_tax_template_igic_ISP95,
             + (3 * 380)  # account_tax_template_igic_ISP15,
             + (3 * 390)  # account_tax_template_igic_ISP20,
+            + (3 * 480)  # account_tax_template_igic_ISP1,
         ),
         # Operaciones con inversión del sujeto pasivo - Cuota
         "20": (
@@ -121,6 +148,7 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 35.15)  # account_tax_template_igic_ISP95,
             + (3 * 57)  # account_tax_template_igic_ISP15,
             + (3 * 78)  # account_tax_template_igic_ISP20,
+            + (3 * 4.8)  # account_tax_template_igic_ISP1,
         ),
         # Modificación bases y cuotas - Base imponible (Ventas + Compras)
         "21": (
@@ -132,12 +160,14 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
                 + (2400 - 240)  # account_tax_template_igic_r_9_5
                 + (2600 - 260)  # account_tax_template_igic_r_15
                 + (2800 - 280)  # account_tax_template_igic_r_20
+                + (2900 - 290)  # account_tax_template_igic_r_1
                 + 340  # account_tax_template_igic_ISP0,
                 + 350  # account_tax_template_igic_ISP3,
                 + 360  # account_tax_template_igic_ISP7,
                 + 370  # account_tax_template_igic_ISP95,
                 + 380  # account_tax_template_igic_ISP15,
                 + 390  # account_tax_template_igic_ISP20,
+                + 480  # account_tax_template_igic_ISP1,
             )
         ),
         # Modificación bases y cuotas - Cuota (Ventas + Compras)
@@ -150,21 +180,26 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
                 + (228 - 22.8)  # account_tax_template_igic_r_9_5
                 + (390 - 39)  # account_tax_template_igic_r_15
                 + (560 - 56)  # account_tax_template_igic_r_20
+                + (29 - 2.9)  # account_tax_template_igic_r_1
                 + 0  # account_tax_template_igic_ISP0,
                 + 10.5  # account_tax_template_igic_ISP3,
                 + 25.2  # account_tax_template_igic_ISP7,
                 + 35.15  # account_tax_template_igic_ISP95,
                 + 57  # account_tax_template_igic_ISP15,
                 + 78  # account_tax_template_igic_ISP20,
+                + 4.8  # account_tax_template_igic_ISP1,
             )
         ),
         # IGIC deducible en operaciones interiores bienes y servicios corrientes - Base
         "26": (
-            (3 * 300 - 3 * 30)  # account_tax_template_igic_sop_3
+            (3 * 200)  # account_tax_template_igic_sop_0
+            + (3 * 300 - 3 * 30)  # account_tax_template_igic_sop_3
             + (3 * 400 - 3 * 40)  # account_tax_template_igic_sop_7
             + (3 * 500 - 3 * 50)  # account_tax_template_igic_sop_9_5
             + (3 * 600 - 3 * 60)  # account_tax_template_igic_sop_15
             + (3 * 700 - 3 * 70)  # account_tax_template_igic_sop_20
+            + (3 * 800)  # account_tax_template_igic_sop_1
+            + (3 * 999.95)  # account_tax_template_igic_sop_1_cmino
             # account_tax_template_igic_ISP0
             + (3 * 340)
             # account_tax_template_igic_ISP3
@@ -177,8 +212,12 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 380)
             # account_tax_template_igic_ISP20
             + (3 * 390)
+            # account_tax_template_igic_ISP1
+            + (3 * 480)
             # account_tax_template_igic_p_re0
             + (3 * 410)
+            # account_tax_template_igic_p_re01
+            + (3 * 470)
             # account_tax_template_igic_p_re03
             + (3 * 420)
             # account_tax_template_igic_p_re07
@@ -197,6 +236,8 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 47.5 - 3 * 4.75)  # account_tax_template_igic_sop_9_5
             + (3 * 90 - 3 * 9)  # account_tax_template_igic_sop_15
             + (3 * 140 - 3 * 14)  # account_tax_template_igic_sop_20
+            + (3 * 8)  # account_tax_template_igic_sop_1
+            + (3 * 7.05)  # account_tax_template_igic_sop_1_cmino
             # account_tax_template_igic_ISP3
             + (3 * 10.5)
             # account_tax_template_igic_ISP7
@@ -207,8 +248,12 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 57)
             # account_tax_template_igic_ISP20
             + (3 * 78)
+            # account_tax_template_igic_ISP1
+            + (3 * 4.8)
             # account_tax_template_igic_p_re03
             + (3 * 1.26)
+            # account_tax_template_igic_p_re01
+            + (3 * 0.47)
             # account_tax_template_igic_p_re07
             + (3 * 3.01)
             # account_tax_template_igic_p_re095
@@ -232,6 +277,18 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 150)
             # account_tax_template_igic_sop_20_inv
             + (3 * 160)
+            # account_tax_template_igic_sop_3_cmino_inv
+            + (3 * 999.56)
+            # account_tax_template_igic_sop_5_cmino_inv
+            + (3 * 998.78)
+            # account_tax_template_igic_sop_7_cmino_inv
+            + (3 * 997.6)
+            # account_tax_template_igic_sop_9_5_cmino_inv
+            + (3 * 995.58)
+            # account_tax_template_igic_sop_15_cmino_inv
+            + (3 * 988.98)
+            # account_tax_template_igic_sop_20_cmino_inv
+            + (3 * 980.4)
         ),
         # IGIC deducible en operaciones interiores bienes de inversión - Cuota
         "29": (
@@ -247,6 +304,18 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 22.5)
             # account_tax_template_igic_sop_20_inv
             + (3 * 32)
+            # account_tax_template_igic_sop_3_cmino_inv
+            + (3 * 21.44)
+            # account_tax_template_igic_sop_5_cmino_inv
+            + (3 * 36.22)
+            # account_tax_template_igic_sop_7_cmino_inv
+            + (3 * 51.4)
+            # account_tax_template_igic_sop_9_5_cmino_inv
+            + (3 * 70.92)
+            # account_tax_template_igic_sop_15_cmino_inv
+            + (3 * 116.02)
+            # account_tax_template_igic_sop_20_cmino_inv
+            + (3 * 159.6)
         ),
         # IGIC deducible por importaciones de bienes corrientes - Base
         "30": (
@@ -262,6 +331,8 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 250)
             # account_tax_template_igic_sop_i_20
             + (3 * 260)
+            # account_tax_template_igic_sop_i_1
+            + (3 * 490)
         ),
         # IGIC deducible por importaciones de bienes corrientes - Cuota
         "31": (
@@ -277,6 +348,8 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
             + (3 * 37.5)
             # account_tax_template_igic_sop_i_20
             + (3 * 52)
+            # account_tax_template_igic_sop_i_1
+            + (3 * 4.9)
         ),
         # IGIC deducible por importaciones de bienes de inversión - Base
         "32": (
@@ -324,6 +397,10 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
                 + (600 - 60)
                 # account_tax_template_igic_sop_20
                 + (700 - 70)
+                # account_tax_template_igic_sop_1
+                + 800
+                # account_tax_template_igic_sop_1_cmino
+                + 999.95
                 # account_tax_template_igic_sop_0_inv
                 + (110)
                 # account_tax_template_igic_sop_3_inv
@@ -336,12 +413,63 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
                 + (150)
                 # account_tax_template_igic_sop_20_inv
                 + (160)
+                # account_tax_template_igic_sop_3_cmino_inv
+                + 999.56
+                # account_tax_template_igic_sop_5_cmino_inv
+                + 998.78
+                # account_tax_template_igic_sop_7_cmino_inv
+                + 997.6
+                # account_tax_template_igic_sop_9_5_cmino_inv
+                + 995.58
+                # account_tax_template_igic_sop_15_cmino_inv
+                + 988.98
+                # account_tax_template_igic_sop_20_cmino_inv
+                + 980.4
                 + 340  # account_tax_template_igic_ISP0,
                 + 350  # account_tax_template_igic_ISP3,
                 + 360  # account_tax_template_igic_ISP7,
                 + 370  # account_tax_template_igic_ISP95,
                 + 380  # account_tax_template_igic_ISP15,
                 + 390  # account_tax_template_igic_ISP20,
+                + 480  # account_tax_template_igic_ISP1,
+                + 470  # account_tax_template_igic_p_re01,
+                + 490  # account_tax_template_igic_sop_i_1,
+                # account_tax_template_igic_p_re0
+                + 410
+                # account_tax_template_igic_p_re03
+                + 420
+                # account_tax_template_igic_p_re07
+                + 430
+                # account_tax_template_igic_p_re095
+                + 440
+                # account_tax_template_igic_p_re15
+                + 450
+                # account_tax_template_igic_p_re20
+                + 460
+                # account_tax_template_igic_sop_i_0
+                + 210
+                # account_tax_template_igic_sop_i_3
+                + 220
+                # account_tax_template_igic_sop_i_7
+                + 230
+                # account_tax_template_igic_sop_i_9_5
+                + 240
+                # account_tax_template_igic_sop_i_15
+                + 250
+                # account_tax_template_igic_sop_i_20
+                + 260
+                # account_tax_template_igic_sop_i_0_inv
+                + 270
+                # account_tax_template_igic_sop_i_3_inv
+                + 280
+                # account_tax_template_igic_sop_i_7_inv
+                + 290
+                # account_tax_template_igic_sop_i_9_5_inv
+                + 310
+                # account_tax_template_igic_sop_i_15_inv
+                + 320
+                # account_tax_template_igic_sop_i_20_inv
+                + 330
             )
         ),
         # Rectificación de deducciones - Cuota
@@ -360,6 +488,10 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
                 + (90 - 9)
                 # account_tax_template_igic_sop_20
                 + (140 - 14)
+                # account_tax_template_igic_sop_1
+                + 8
+                # account_tax_template_igic_sop_1_cmino
+                + 7.05
                 # account_tax_template_igic_sop_0_inv
                 + (0)
                 # account_tax_template_igic_sop_3_inv
@@ -372,12 +504,63 @@ class TestL10nEsAtcMod420Base(TestL10nEsAeatModBase):
                 + (22.5)
                 # account_tax_template_igic_sop_20_inv
                 + (32)
+                # account_tax_template_igic_sop_3_cmino_inv
+                + 21.44
+                # account_tax_template_igic_sop_5_cmino_inv
+                + 36.22
+                # account_tax_template_igic_sop_7_cmino_inv
+                + 51.4
+                # account_tax_template_igic_sop_9_5_cmino_inv
+                + 70.92
+                # account_tax_template_igic_sop_15_cmino_inv
+                + 116.02
+                # account_tax_template_igic_sop_20_cmino_inv
+                + 159.6
                 + 0  # account_tax_template_igic_ISP0,
                 + 10.5  # account_tax_template_igic_ISP3,
                 + 25.2  # account_tax_template_igic_ISP7,
                 + 35.15  # account_tax_template_igic_ISP95,
                 + 57  # account_tax_template_igic_ISP15,
                 + 78  # account_tax_template_igic_ISP20,
+                + 4.8  # account_tax_template_igic_ISP1,
+                + 0.47  # account_tax_template_igic_p_re01,
+                + 4.9  # account_tax_template_igic_sop_i_1,
+                # account_tax_template_igic_p_re0
+                + 0
+                # account_tax_template_igic_p_re03
+                + 1.26
+                # account_tax_template_igic_p_re07
+                + 3.01
+                # account_tax_template_igic_p_re095
+                + 4.18
+                # account_tax_template_igic_p_re15
+                + 6.75
+                # account_tax_template_igic_p_re20
+                + 9.2
+                # account_tax_template_igic_sop_i_0
+                + 0
+                # account_tax_template_igic_sop_i_3
+                + 6.6
+                # account_tax_template_igic_sop_i_7
+                + 16.1
+                # account_tax_template_igic_sop_i_9_5
+                + 22.8
+                # account_tax_template_igic_sop_i_15
+                + 37.5
+                # account_tax_template_igic_sop_i_20
+                + 52
+                # account_tax_template_igic_sop_i_0_inv
+                + 0
+                # account_tax_template_igic_sop_i_3_inv
+                + 8.4
+                # account_tax_template_igic_sop_i_7_inv
+                + 20.3
+                # account_tax_template_igic_sop_i_9_5_inv
+                + 29.45
+                # account_tax_template_igic_sop_i_15_inv
+                + 48
+                # account_tax_template_igic_sop_i_20_inv
+                + 66
             )
         ),
     }

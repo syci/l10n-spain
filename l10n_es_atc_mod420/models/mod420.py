@@ -146,30 +146,47 @@ class L10nEsAtcMod420Report(models.Model):
     )
     allow_posting = fields.Boolean(string="Allow posting", default=True)
 
-    @api.depends("tax_line_ids", "tax_line_ids.amount")
+    @api.depends("tax_line_ids", "tax_line_ids.amount", "casilla_24")
     def _compute_total_devengado(self):
-        casillas_devengado = (3, 6, 9, 12, 15, 18, 20, 22, 24)
+        casillas_devengado = (3, 6, 9, 12, 15, 18, 20, 22)
         for report in self:
             tax_lines = report.tax_line_ids.filtered(
                 lambda x: x.field_number in casillas_devengado
             )
-            report.total_devengado = sum(tax_lines.mapped("amount"))
+            report.total_devengado = sum(tax_lines.mapped("amount")) - report.casilla_24
 
-    @api.depends("tax_line_ids", "tax_line_ids.amount")
+    @api.depends(
+        "tax_line_ids",
+        "tax_line_ids.amount",
+        "casilla_36",
+        "casilla_37",
+        "casilla_38",
+        "casilla_39",
+    )
     def _compute_total_deducir(self):
-        casillas_deducir = (27, 29, 31, 33, 35, 36, 37, 38, 39)
+        casillas_deducir = (27, 29, 31, 33, 35)
         for report in self:
             tax_lines = report.tax_line_ids.filtered(
                 lambda x: x.field_number in casillas_deducir
             )
-            report.total_deducir = sum(tax_lines.mapped("amount"))
+            report.total_deducir = sum(tax_lines.mapped("amount")) + (
+                report.casilla_36
+                + report.casilla_37
+                + report.casilla_38
+                + report.casilla_39
+            )
 
     @api.depends("total_devengado", "total_deducir")
     def _compute_diferencia(self):
         for report in self:
             report.diferencia = report.total_devengado - report.total_deducir
 
-    @api.depends("total_devengado")
+    @api.depends(
+        "diferencia",
+        "regularizacion_cuotas",
+        "cuotas_compensar",
+        "a_deducir",
+    )
     def _compute_resultado_autoliquidacion(self):
         for report in self:
             report.resultado_autoliquidacion = (
